@@ -1,0 +1,95 @@
+package ru.akydev.akymoderation.commands;
+
+import org.bukkit.Bukkit;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+import ru.akydev.akymoderation.AkyModeration;
+import ru.akydev.akymoderation.punishment.PunishmentManager;
+import ru.akydev.akymoderation.punishment.PunishmentType;
+import ru.akydev.akymoderation.utils.MessageUtils;
+
+public class WarnCommand implements CommandExecutor {
+    
+    private final AkyModeration plugin;
+    private final PunishmentManager punishmentManager;
+    private final MessageUtils messageUtils;
+    
+    public WarnCommand(AkyModeration plugin) {
+        this.plugin = plugin;
+        this.punishmentManager = plugin.getPunishmentManager();
+        this.messageUtils = plugin.getMessageUtils();
+    }
+    
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!sender.hasPermission("akymoderation.warn")) {
+            messageUtils.sendMessage(sender, messageUtils.getNoPermission());
+            return true;
+        }
+        
+        if (args.length < 2) {
+            messageUtils.sendMessage(sender, "&cИспользование: /warn <игрок> <причина>");
+            return true;
+        }
+        
+        String targetName = args[0];
+        Player target = Bukkit.getPlayer(targetName);
+        
+        StringBuilder reasonBuilder = new StringBuilder();
+        for (int i = 1; i < args.length; i++) {
+            if (i > 1) {
+                reasonBuilder.append(" ");
+            }
+            reasonBuilder.append(args[i]);
+        }
+        String reason = reasonBuilder.toString();
+        
+        if (target != null && target.isOnline()) {
+            if (target.hasPermission("akymoderation.exempt")) {
+                messageUtils.sendMessage(sender, "&cЭтот игрок имеет иммунитет к наказаниям!");
+                return true;
+            }
+            
+            if (!(sender instanceof Player)) {
+                messageUtils.sendMessage(sender, "&cЭта команда может быть выполнена только игроком!");
+                return true;
+            }
+            
+            Player moderator = (Player) sender;
+            punishmentManager.issuePunishment(PunishmentType.WARN, target, moderator, reason, "0", false)
+                .thenAccept(success -> {
+                    if (success) {
+                        messageUtils.sendMessage(moderator, "&aИгрок " + target.getName() + " успешно предупрежден!");
+                        checkAutoPunishment(target, moderator);
+                    } else {
+                        messageUtils.sendMessage(moderator, "&cНе удалось выдать предупреждение!");
+                    }
+                });
+        } else {
+            messageUtils.sendMessage(sender, messageUtils.getPlayerNotFound());
+            return true;
+        }
+        
+        return true;
+    }
+    
+    private void checkAutoPunishment(Player target, Player moderator) {
+        punishmentManager.getPunishmentCount(target.getUniqueId(), PunishmentType.WARN)
+            .thenAccept(count -> {
+                int warnLimit = plugin.getConfigManager().getMainConfig().getAutoBanAfter();
+                int muteLimit = plugin.getConfigManager().getMainConfig().getAutoMuteAfter();
+                
+                if (count >= warnLimit) {
+                    String banDuration = plugin.getConfigManager().getMainConfig().getWarnBanDuration();
+                    punishmentManager.issuePunishment(PunishmentType.BAN, target, moderator, 
+                        "Превышен лимит предупреждений", banDuration, false);
+                } else if (count >= muteLimit) {
+                    String muteDuration = plugin.getConfigManager().getMainConfig().getWarnMuteDuration();
+                    punishmentManager.issuePunishment(PunishmentType.MUTE, target, moderator, 
+                        "Превышен лимит предупреждений", muteDuration, false);
+                }
+            });
+    }
+}

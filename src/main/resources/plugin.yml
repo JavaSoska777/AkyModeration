@@ -1,0 +1,97 @@
+name: AkyModeration
+version: 1.0.0
+main: ru.akydev.akymoderation.AkyModeration
+author: AkyDev
+website: https://github.com/JavaSoska777
+api-version: 1.16
+
+commands:
+  ban:
+    description: "Забанить игрока"
+    usage: "/ban <игрок> [время] <причина>"
+    permission: akymoderation.ban
+  
+  mute:
+    description: "Замутить игрока"
+    usage: "/mute <игрок> [время] <причина>"
+    permission: akymoderation.mute
+  
+  kick:
+    description: "Кикнуть игрока"
+    usage: "/kick <игрок> <причина>"
+    permission: akymoderation.kick
+  
+  warn:
+    description: "Выдать предупреждение"
+    usage: "/warn <игрок> <причина>"
+    permission: akymoderation.warn
+  
+  unban:
+    description: "Разбанить игрока"
+    usage: "/unban <игрок>"
+    permission: akymoderation.unban
+  
+  unmute:
+    description: "Размутить игрока"
+    usage: "/unmute <игрок>"
+    permission: akymoderation.unmute
+  
+  backup:
+    description: "Управление резервными копиями"
+    usage: "/backup <подкоманда>"
+    permission: akymoderation.backup
+  
+  mod:
+    description: "Основная команда управления"
+    usage: "/mod <подкоманда>"
+    permission: akymoderation.admin
+
+permissions:
+  akymoderation.*:
+    description: "Все права AkyModeration"
+    children:
+      akymoderation.ban: true
+      akymoderation.mute: true
+      akymoderation.kick: true
+      akymoderation.warn: true
+      akymoderation.unban: true
+      akymoderation.unmute: true
+      akymoderation.backup: true
+      akymoderation.admin: true
+      akymoderation.exempt: true
+  
+  akymoderation.ban:
+    description: "Право на бан"
+    default: op
+  
+  akymoderation.mute:
+    description: "Право на мут"
+    default: op
+  
+  akymoderation.kick:
+    description: "Право на кик"
+    default: op
+  
+  akymoderation.warn:
+    description: "Право на варн"
+    default: op
+  
+  akymoderation.unban:
+    description: "Право на разбан"
+    default: op
+  
+  akymoderation.unmute:
+    description: "Право на размут"
+    default: op
+  
+  akymoderation.backup:
+    description: "Право на управление резервными копиями"
+    default: op
+  
+  akymoderation.admin:
+    description: "Права администратора"
+    default: op
+  
+  akymoderation.exempt:
+    description: "Имунитет к наказаниям"
+    default: false
